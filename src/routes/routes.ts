@@ -1,7 +1,7 @@
 import { lazy } from 'react';
 import { IRoute } from './types';
 
-const Home = lazy(() => import('../pages/Home'));
+const Home = lazy(() => import('../pages/Login'));
 const Users = lazy(() => import('../pages/Users/List'));
 const Actions = lazy(() => import('../pages/Users/Actions'));
 const Error = lazy(() => import('../pages/Error'));

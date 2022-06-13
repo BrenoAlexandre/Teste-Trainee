@@ -1,7 +1,13 @@
+import ERole from '../enums/ERole';
+
 export interface IUser {
-  createdAt: Date;
-  first_name: string;
-  last_name: string;
-  email: string;
   id: string;
+  name: string;
+  cpf: string;
+  birthdate: Date;
+  role: ERole;
+  obs: string;
+  password: string;
+  created_at: Date;
+  updated_at: Date;
 }

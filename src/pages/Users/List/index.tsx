@@ -8,23 +8,38 @@ import { IUser } from '../../../interfaces';
 import UsersService from '../../../services/users.service';
 import toastMsg, { ToastType } from '../../../utils/toastMsg';
 import Button from '../../../components/Button';
+import { useAuth } from '../../../contexts/AuthContext';
 
 const columns = [
-  { label: '#', key: 'id', isCenter: true },
-  { label: 'Nome', key: 'first_name' },
-  { label: 'Sobrenome', key: 'last_name' },
-  { label: 'E-mail', key: 'email' },
-  { label: 'Última atualização', key: 'createdAt', isDate: true },
+  { label: 'Nome', key: 'name' },
+  { label: 'Data de nascimento', key: 'birthdate', isDate: true },
+  { label: 'CPF', key: 'cpf' },
+  { label: 'Permissão', key: 'role' },
 ];
 
 const Users: React.FunctionComponent = (): React.ReactElement => {
   const [users, setUsers] = useState<IUser[]>([]);
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
 
   const history = useHistory();
+  const { hasAuth, logout } = useAuth();
+
+  const isValid = hasAuth();
 
   const fetchUsers = async (): Promise<void> => {
     try {
-      const data = await UsersService.users();
+      const rawUser = localStorage.getItem('user');
+      if (!rawUser) {
+        throw new Error();
+      }
+      const user: IUser = JSON.parse(rawUser);
+
+      if (user.role === 'admin') {
+        setIsAdmin(true);
+      }
+
+      const rawData = await UsersService.users();
+      const data = rawData.filter((u) => u.id !== user.id);
       setUsers(data);
     } catch (error) {
       toastMsg(ToastType.Error, (error as Error).message);
@@ -45,12 +60,16 @@ const Users: React.FunctionComponent = (): React.ReactElement => {
     let isCleaningUp = false;
 
     if (!isCleaningUp) {
-      fetchUsers();
+      if (!isValid) {
+        history.push('');
+      } else {
+        fetchUsers();
+      }
     }
     return () => {
       isCleaningUp = true;
     };
-  }, []);
+  }, [history, isValid]);
 
   return (
     <Section className="users" title="Listagem de funcionários" description="Listagem de funcionários">
@@ -60,21 +79,36 @@ const Users: React.FunctionComponent = (): React.ReactElement => {
             Funcionários
           </Text>
           <Text as="small" size=".85rem" weight={400}>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt
+            Gerencie seu grupo com agilidade!
           </Text>
         </Col>
       </Row>
       <Row>
-        <Col md={12} className="mt-3 mb-2">
-          <Button type="button" variant="primary" onClick={() => history.push('/funcionarios/acao')} cy="test-create">
-            Cadastrar funcionário
+        {isAdmin && (
+          <Col md={3} className="mt-3 mb-2">
+            <Button type="button" variant="primary" onClick={() => history.push('/funcionarios/acao')} cy="test-create">
+              Cadastrar funcionário
+            </Button>
+          </Col>
+        )}
+        <Col md={3} className="mt-3 mb-2">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => {
+              logout();
+              history.push('/');
+            }}
+            cy="test-logout"
+          >
+            Logout
           </Button>
         </Col>
         <Col md={12}>
           <DataTable
             data={users}
             columns={columns}
-            hasActions
+            hasActions={!!isAdmin}
             deleteAction={(id) => deleteUser(id)}
             editAction={(id) => history.push(`/funcionarios/acao/${id}`)}
           />
