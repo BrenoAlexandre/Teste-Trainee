@@ -52,8 +52,8 @@ class UsersService {
       throw new Error('No token found');
     }
 
-    HttpClient.api.defaults.headers.common.Authorization = headers.authorization;
-    localStorage.setItem('TOKEN_KEY', headers.authorization);
+    localStorage.setItem('TOKEN_KEY', `Bearer ${headers.authorization}`);
+    HttpClient.api.defaults.headers.common.Authorization = `Bearer ${headers.authorization}`;
     return data;
   }
 }

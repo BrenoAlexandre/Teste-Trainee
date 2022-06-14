@@ -8,7 +8,6 @@ import { IUser } from '../../../interfaces';
 import UsersService from '../../../services/users.service';
 import toastMsg, { ToastType } from '../../../utils/toastMsg';
 import Button from '../../../components/Button';
-import { useAuth } from '../../../contexts/AuthContext';
 
 const columns = [
   { label: 'Nome', key: 'name' },
@@ -22,9 +21,6 @@ const Users: React.FunctionComponent = (): React.ReactElement => {
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
 
   const history = useHistory();
-  const { hasAuth, logout } = useAuth();
-
-  const isValid = hasAuth();
 
   const fetchUsers = async (): Promise<void> => {
     try {
@@ -60,16 +56,12 @@ const Users: React.FunctionComponent = (): React.ReactElement => {
     let isCleaningUp = false;
 
     if (!isCleaningUp) {
-      if (!isValid) {
-        history.push('');
-      } else {
-        fetchUsers();
-      }
+      fetchUsers();
     }
     return () => {
       isCleaningUp = true;
     };
-  }, [history, isValid]);
+  }, []);
 
   return (
     <Section className="users" title="Listagem de funcionários" description="Listagem de funcionários">
@@ -96,7 +88,6 @@ const Users: React.FunctionComponent = (): React.ReactElement => {
             type="button"
             variant="secondary"
             onClick={() => {
-              logout();
               history.push('/');
             }}
             cy="test-logout"
