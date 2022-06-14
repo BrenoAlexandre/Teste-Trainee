@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import * as yup from 'yup';
+// import * as yup from 'yup';
 import { useFormik } from 'formik';
 import { Row, Col } from 'react-bootstrap';
 import { useHistory, useParams } from 'react-router-dom';
@@ -13,27 +13,27 @@ import { IParam } from '../../../interfaces';
 import toastMsg, { ToastType } from '../../../utils/toastMsg';
 import ERole from '../../../enums/ERole';
 
-const createSchema = yup.object().shape({
-  name: yup.string().min(2, 'Min. 2 caracteres').max(50, 'Máximo 50 caracteres').required('Campo obrigatório'),
-  cpf: yup.string().length(11, 'CPF deve conter 11 dígitos').required('Campo obrigatório'),
-  birthdate: yup.date().required('Campo obrigatório'),
-  role: yup.mixed<keyof typeof ERole>().oneOf(Object.values([ERole.admin, ERole.user])),
-  obs: yup.string().max(500, 'Max. 500 caracteres'),
-  password: yup.string().min(6, 'Min. 6 caracteres').required('Campo obrigatório'),
-  confirmPassword: yup
-    .string()
-    .min(6, 'Min. 6 caracteres')
-    .required('Campo obrigatório')
-    .oneOf([yup.ref('password'), null], 'Passwords must match'),
-});
+// const createSchema = yup.object().shape({
+//   name: yup.string().min(2, 'Min. 2 caracteres').max(50, 'Máximo 50 caracteres').required('Campo obrigatório'),
+//   cpf: yup.string().length(11, 'CPF deve conter 11 dígitos').required('Campo obrigatório'),
+//   birthdate: yup.date().required('Campo obrigatório'),
+//   role: yup.mixed<keyof typeof ERole>().oneOf(Object.values([ERole.admin, ERole.user])),
+//   obs: yup.string().max(500, 'Max. 500 caracteres'),
+//   password: yup.string().min(6, 'Min. 6 caracteres').required('Campo obrigatório'),
+//   confirmPassword: yup
+//     .string()
+//     .min(6, 'Min. 6 caracteres')
+//     .required('Campo obrigatório')
+//     .oneOf([yup.ref('password'), null], 'Passwords must match'),
+// });
 
-const updateSchema = yup.object().shape({
-  name: yup.string().min(2, 'Min. 2 caracteres').max(50, 'Máximo 50 caracteres').required('Campo obrigatório'),
-  cpf: yup.string().length(11, 'CPF deve conter 11 dígitos').required('Campo obrigatório'),
-  birthdate: yup.date().required('Campo obrigatório'),
-  role: yup.mixed<keyof typeof ERole>().oneOf(Object.values([ERole.admin, ERole.user])),
-  obs: yup.string().max(500, 'Max. 500 caracteres'),
-});
+// const updateSchema = yup.object().shape({
+//   name: yup.string().min(2, 'Min. 2 caracteres').max(50, 'Máximo 50 caracteres').required('Campo obrigatório'),
+//   cpf: yup.string().length(11, 'CPF deve conter 11 dígitos').required('Campo obrigatório'),
+//   birthdate: yup.date().required('Campo obrigatório'),
+//   role: yup.mixed<keyof typeof ERole>().oneOf(Object.values([ERole.admin, ERole.user])),
+//   obs: yup.string().max(500, 'Max. 500 caracteres'),
+// });
 
 interface ICreate {
   name: string;
@@ -113,11 +113,16 @@ const Create: React.FunctionComponent = (): React.ReactElement => {
     };
   }, [history, id]);
 
+  // validationSchema: id ? createSchema : updateSchema,
+
   const formik = useFormik({
     initialValues,
-    validationSchema: id ? createSchema : updateSchema,
     enableReinitialize: true,
-    onSubmit: submitHandler,
+    onSubmit: (values, { setSubmitting }) => {
+      setSubmitting(true);
+      submitHandler(values);
+      setSubmitting(false);
+    },
   });
 
   return (
@@ -146,8 +151,7 @@ const Create: React.FunctionComponent = (): React.ReactElement => {
                     id="name"
                     name="name"
                     disabled={!!id}
-                    value={`${formik.values.name}`}
-                    onChange={formik.handleChange}
+                    value={formik.values.name}
                     placeholder="Nome do funcionário"
                     className={classNames('form-control')}
                   />
@@ -160,13 +164,16 @@ const Create: React.FunctionComponent = (): React.ReactElement => {
                   <br />
                   <InputMask
                     mask="999.999.999-99"
-                    maskPlaceholder=""
-                    value={`${formik.values.cpf}`}
+                    maskPlaceholder={' '}
+                    value={formik.values.cpf}
                     onChange={formik.handleChange}
                     disabled={!!id}
                   >
                     {() => (
                       <input
+                        value={formik.values.cpf}
+                        onChange={formik.handleChange}
+                        disabled={!!id}
                         data-testid="test-inputCpf"
                         id="cpf"
                         name="cpf"
@@ -203,7 +210,7 @@ const Create: React.FunctionComponent = (): React.ReactElement => {
                     data-testid="test-selectRole"
                     id="role"
                     name="role"
-                    value={`${formik.values.role}`}
+                    value={formik.values.role}
                     onChange={formik.handleChange}
                     className={classNames('form-control')}
                   >
@@ -225,7 +232,7 @@ const Create: React.FunctionComponent = (): React.ReactElement => {
                         id="password"
                         name="password"
                         type="password"
-                        value={`${formik.values.password}`}
+                        value={formik.values.password}
                         onChange={formik.handleChange}
                         placeholder="Senha"
                         className={classNames('form-control')}
@@ -242,7 +249,7 @@ const Create: React.FunctionComponent = (): React.ReactElement => {
                         id="confirmPassword"
                         name="confirmPassword"
                         type="password"
-                        value={`${formik.values.confirmPassword}`}
+                        value={formik.values.confirmPassword}
                         onChange={formik.handleChange}
                         placeholder="Confirmar senha"
                         className={classNames('form-control')}
