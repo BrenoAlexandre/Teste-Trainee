@@ -5,7 +5,6 @@ import { routes } from './routes';
 
 // components;
 import Loader from '../components/Loader';
-import { AuthProvider } from '../contexts/AuthContext';
 
 const Routes: React.FunctionComponent = () => {
   const renderRoutes = (): React.ReactNode => routes.map((route) => <Route key={route.path} {...route} exact />);
@@ -16,9 +15,7 @@ const Routes: React.FunctionComponent = () => {
         <main>
           <Container fluid>
             <React.Suspense fallback={<Loader />}>
-              <AuthProvider>
-                <Switch>{renderRoutes()}</Switch>
-              </AuthProvider>
+              <Switch>{renderRoutes()}</Switch>
             </React.Suspense>
           </Container>
         </main>
