@@ -88,6 +88,7 @@ const Users: React.FunctionComponent = (): React.ReactElement => {
             type="button"
             variant="secondary"
             onClick={() => {
+              localStorage.clear();
               history.push('/');
             }}
             cy="test-logout"
