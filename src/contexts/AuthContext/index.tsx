@@ -1,14 +1,13 @@
 import { AxiosResponseHeaders } from 'axios';
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import jwtDecode from 'jwt-decode';
+import React, { createContext, useContext, useState } from 'react';
 import { IUser } from '../../interfaces';
 import HttpClient from '../../services/httpClient';
-import checkTokenIsValid from '../../utils/checkTokenIsValid';
-import getTokenStorage from '../../utils/getTokenStorage';
 import setTokenStorage from '../../utils/setTokenStorage';
 
 interface AuthContextData {
+  signed: boolean;
   user: IUser | null;
-  isValid(): boolean;
   Login({ data, headers }: { data: IUser; headers: AxiosResponseHeaders }): Promise<boolean>;
   Logout(): void;
 }
@@ -27,27 +26,13 @@ export function useAuth(): AuthContextData {
 export const AuthProvider = ({ children }: { children: React.ReactElement }): React.ReactElement => {
   const [user, setUser] = useState<IUser | null>(null);
 
-  useEffect(() => {
-    const storagedToken = getTokenStorage();
-
-    if (storagedToken) {
-      HttpClient.api.defaults.headers.common.authorization = storagedToken;
-    }
-  }, []);
-
-  function isValid(): boolean {
-    if (!checkTokenIsValid('TOKEN_KEY')) {
-      return false;
-    }
-
-    return true;
-  }
-
   async function Login({ data, headers }: { data: IUser; headers: AxiosResponseHeaders }): Promise<boolean> {
-    const token = setTokenStorage('TOKEN_KEY', headers.authorization);
+    setTokenStorage('TOKEN_KEY', `Bearer ${headers.authorization}`);
 
-    if (checkTokenIsValid('TOKEN_KEY')) {
-      HttpClient.api.defaults.headers.common.authorization = token;
+    const decoded = await jwtDecode<Promise<IUser>>(headers.authorization);
+
+    if (decoded) {
+      HttpClient.api.defaults.headers.common.authorization = `Bearer ${headers.authorization}`;
 
       localStorage.setItem('user', JSON.stringify(data));
       setUser(data);
@@ -64,7 +49,7 @@ export const AuthProvider = ({ children }: { children: React.ReactElement }): Re
     setUser(null);
   }
 
-  return <AuthContext.Provider value={{ isValid, user, Login, Logout }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ signed: Boolean(user), user, Login, Logout }}>{children}</AuthContext.Provider>;
 };
 
 export default AuthContext;

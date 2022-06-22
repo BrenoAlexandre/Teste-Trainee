@@ -10,6 +10,7 @@ import UsersService from '../../services/users.service';
 import toastMsg, { ToastType } from '../../utils/toastMsg';
 import { MaskedInput } from '../../components/MaskedInput';
 import Input from '../../components/Input';
+import { useAuth } from '../../contexts/AuthContext';
 
 const loginSchema = yup.object().shape({
   cpf: yup.string().length(11, 'CPF deve conter 11 dígitos').required('Campo obrigatório'),
@@ -31,6 +32,7 @@ const Home: React.FunctionComponent = () => {
   const [initialValues] = useState(defaultValue as ILogin);
 
   const history = useHistory();
+  const { Login } = useAuth();
 
   async function loginHandler(values: ILogin): Promise<void> {
     setLoader(true);
@@ -38,13 +40,12 @@ const Home: React.FunctionComponent = () => {
 
     try {
       localStorage.clear();
-      const data = await UsersService.login(cpf, password);
+      const { headers, data } = await UsersService.login(cpf, password);
+      const signed = await Login({ headers, data });
 
-      if (data) {
-        localStorage.setItem('user', JSON.stringify(data));
+      if (signed) {
         history.replace('/funcionarios');
       }
-
       setLoader(false);
     } catch (error) {
       toastMsg(ToastType.Error, 'Usuário incorreto, verifique seus dados.');

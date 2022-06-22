@@ -1,3 +1,4 @@
+import { AxiosResponseHeaders } from 'axios';
 import HttpClient from './httpClient';
 import { IUser } from '../interfaces';
 import ERole from '../enums/ERole';
@@ -45,17 +46,17 @@ class UsersService {
     return statusText;
   }
 
-  static async login(cpf: string, password: string): Promise<IUser> {
+  static async login(cpf: string, password: string): Promise<{ headers: AxiosResponseHeaders; data: IUser }> {
     const { headers, data } = await HttpClient.api.post('api/v1/login', { cpf, password });
 
     if (!headers || !headers.authorization) {
-      throw new Error('No token found');
+      throw new Error('Token not received');
     }
 
     localStorage.setItem('TOKEN_KEY', `Bearer ${headers.authorization}`);
     localStorage.setItem('user', JSON.stringify(data));
     HttpClient.api.defaults.headers.common.Authorization = `Bearer ${headers.authorization}`;
-    return data;
+    return { headers, data };
   }
 }
 
