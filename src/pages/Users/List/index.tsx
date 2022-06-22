@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button as BootButton, Row, Col, Modal } from 'react-bootstrap';
 import { useHistory } from 'react-router-dom';
+import { formatCPF } from '@brazilian-utils/brazilian-utils';
 import Section from '../../../components/Section';
 import Text from '../../../components/Text';
 import DataTable from '../../../components/DataTable';
@@ -44,7 +45,7 @@ const Users: React.FunctionComponent = (): React.ReactElement => {
       }
 
       const rawData = await UsersService.users();
-      const data = rawData.filter((u) => u.id !== user.id);
+      const data = rawData.filter((u) => u.id !== user.id).map((u) => ({ ...u, cpf: formatCPF(u.cpf) }));
       setUsers(data);
     } catch (error) {
       toastMsg(ToastType.Error, (error as Error).message);

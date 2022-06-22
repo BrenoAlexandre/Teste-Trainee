@@ -3,6 +3,7 @@ import * as yup from 'yup';
 import { Formik, Form } from 'formik';
 import { Row, Col } from 'react-bootstrap';
 import { useHistory, useParams } from 'react-router-dom';
+import { isValidCPF } from '@brazilian-utils/brazilian-utils';
 import Section from '../../../components/Section';
 import Text from '../../../components/Text';
 import Button from '../../../components/Button';
@@ -66,6 +67,11 @@ const Create: React.FunctionComponent = (): React.ReactElement => {
     try {
       setLoader(true);
       const { name, cpf, birthdate = new Date(), role, obs, password, confirmPassword } = values;
+
+      const cpfValid = isValidCPF(cpf);
+      if (!cpfValid) {
+        throw new Error('CPF inválido');
+      }
 
       if (id) {
         await UsersService.update(id, { name, cpf, birthdate, role, obs });
