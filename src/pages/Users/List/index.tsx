@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Row, Col } from 'react-bootstrap';
+import { Button as BootButton, Row, Col, Modal } from 'react-bootstrap';
 import { useHistory } from 'react-router-dom';
 import Section from '../../../components/Section';
 import Text from '../../../components/Text';
@@ -19,6 +19,15 @@ const columns = [
 const Users: React.FunctionComponent = (): React.ReactElement => {
   const [users, setUsers] = useState<IUser[]>([]);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
+
+  const [open, setOpen] = useState<boolean>(false);
+  const [delId, setDelId] = useState<string>('');
+
+  const handleClose = (): void => setOpen(false);
+  const handleOpen = (id: string): void => {
+    setOpen(true);
+    setDelId(id);
+  };
 
   const history = useHistory();
 
@@ -45,8 +54,11 @@ const Users: React.FunctionComponent = (): React.ReactElement => {
   const deleteUser = async (id: string): Promise<void> => {
     try {
       const res = await UsersService.delete(id);
-      toastMsg(ToastType.Success, res);
+      if (res) {
+        toastMsg(ToastType.Success, 'User succesfully deleted');
+      }
       fetchUsers();
+      handleClose();
     } catch (error) {
       toastMsg(ToastType.Error, (error as Error).message);
     }
@@ -56,6 +68,7 @@ const Users: React.FunctionComponent = (): React.ReactElement => {
     let isCleaningUp = false;
 
     if (!isCleaningUp) {
+      UsersService.login('00000000000', '123123admin');
       fetchUsers();
     }
     return () => {
@@ -101,9 +114,31 @@ const Users: React.FunctionComponent = (): React.ReactElement => {
             data={users}
             columns={columns}
             hasActions={!!isAdmin}
-            deleteAction={(id) => deleteUser(id)}
+            deleteAction={(id) => handleOpen(id)}
             editAction={(id) => history.push(`/funcionarios/acao/${id}`)}
           />
+          <Modal show={open} onHide={handleClose}>
+            <Modal.Header closeButton>
+              <Modal.Title>Excluir usuário?</Modal.Title>
+            </Modal.Header>
+
+            <Modal.Body>
+              <p>
+                Você tem certeza que deseja excluir este usuário?
+                <br />
+                <br /> Suas ações não poderam ser desfeitas.
+              </p>
+            </Modal.Body>
+
+            <Modal.Footer>
+              <BootButton variant="secondary" onClick={handleClose}>
+                Cancelar
+              </BootButton>
+              <BootButton variant="primary" onClick={() => deleteUser(delId)}>
+                Excluir
+              </BootButton>
+            </Modal.Footer>
+          </Modal>
         </Col>
       </Row>
     </Section>

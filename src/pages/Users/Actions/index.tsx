@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
-// import * as yup from 'yup';
-import { useFormik } from 'formik';
+import * as yup from 'yup';
+import { Formik, Form } from 'formik';
 import { Row, Col } from 'react-bootstrap';
 import { useHistory, useParams } from 'react-router-dom';
-import classNames from 'classnames';
-import InputMask from 'react-input-mask';
 import Section from '../../../components/Section';
 import Text from '../../../components/Text';
 import Button from '../../../components/Button';
@@ -12,33 +10,36 @@ import UsersService from '../../../services/users.service';
 import { IParam } from '../../../interfaces';
 import toastMsg, { ToastType } from '../../../utils/toastMsg';
 import ERole from '../../../enums/ERole';
+import Input from '../../../components/Input';
+import { MaskedInput } from '../../../components/MaskedInput';
+import { DateInput } from '../../../components/DateInput';
 
-// const createSchema = yup.object().shape({
-//   name: yup.string().min(2, 'Min. 2 caracteres').max(50, 'Máximo 50 caracteres').required('Campo obrigatório'),
-//   cpf: yup.string().length(11, 'CPF deve conter 11 dígitos').required('Campo obrigatório'),
-//   birthdate: yup.date().required('Campo obrigatório'),
-//   role: yup.mixed<keyof typeof ERole>().oneOf(Object.values([ERole.admin, ERole.user])),
-//   obs: yup.string().max(500, 'Max. 500 caracteres'),
-//   password: yup.string().min(6, 'Min. 6 caracteres').required('Campo obrigatório'),
-//   confirmPassword: yup
-//     .string()
-//     .min(6, 'Min. 6 caracteres')
-//     .required('Campo obrigatório')
-//     .oneOf([yup.ref('password'), null], 'Passwords must match'),
-// });
+const createSchema = yup.object().shape({
+  name: yup.string().min(2, 'Min. 2 caracteres').max(120, 'Máximo 120 caracteres').required('Campo obrigatório'),
+  cpf: yup.string().length(11, 'CPF deve conter 11 dígitos').required('Campo obrigatório'),
+  birthdate: yup.date().required('Campo obrigatório'),
+  role: yup.mixed<keyof typeof ERole>().oneOf(Object.values([ERole.admin, ERole.user])),
+  obs: yup.string().max(500, 'Max. 500 caracteres'),
+  password: yup.string().min(6, 'Min. 6 caracteres').required('Campo obrigatório'),
+  confirmPassword: yup
+    .string()
+    .min(6, 'Min. 6 caracteres')
+    .required('Campo obrigatório')
+    .oneOf([yup.ref('password'), null], 'As senhas devem ser iguais'),
+});
 
-// const updateSchema = yup.object().shape({
-//   name: yup.string().min(2, 'Min. 2 caracteres').max(50, 'Máximo 50 caracteres').required('Campo obrigatório'),
-//   cpf: yup.string().length(11, 'CPF deve conter 11 dígitos').required('Campo obrigatório'),
-//   birthdate: yup.date().required('Campo obrigatório'),
-//   role: yup.mixed<keyof typeof ERole>().oneOf(Object.values([ERole.admin, ERole.user])),
-//   obs: yup.string().max(500, 'Max. 500 caracteres'),
-// });
+const updateSchema = yup.object().shape({
+  name: yup.string().min(2, 'Min. 2 caracteres').max(120, 'Máximo 120 caracteres').required('Campo obrigatório'),
+  cpf: yup.string().length(11, 'CPF deve conter 11 dígitos').required('Campo obrigatório'),
+  birthdate: yup.date().required('Campo obrigatório'),
+  role: yup.mixed<keyof typeof ERole>().oneOf(Object.values([ERole.admin, ERole.user])),
+  obs: yup.string().max(500, 'Max. 500 caracteres'),
+});
 
 interface ICreate {
   name: string;
   cpf: string;
-  birthdate: Date;
+  birthdate: Date | undefined;
   role: ERole;
   obs: string;
   password: string;
@@ -48,7 +49,7 @@ interface ICreate {
 const defaultValue = {
   name: '',
   cpf: '',
-  birthdate: new Date(),
+  birthdate: undefined,
   role: ERole.default,
   obs: '',
   password: '',
@@ -64,7 +65,7 @@ const Create: React.FunctionComponent = (): React.ReactElement => {
   async function submitHandler(values: ICreate): Promise<void> {
     try {
       setLoader(true);
-      const { name, cpf, birthdate, role, obs, password, confirmPassword } = values;
+      const { name, cpf, birthdate = new Date(), role, obs, password, confirmPassword } = values;
 
       if (id) {
         await UsersService.update(id, { name, cpf, birthdate, role, obs });
@@ -113,18 +114,6 @@ const Create: React.FunctionComponent = (): React.ReactElement => {
     };
   }, [history, id]);
 
-  // validationSchema: id ? createSchema : updateSchema,
-
-  const formik = useFormik({
-    initialValues,
-    enableReinitialize: true,
-    onSubmit: (values, { setSubmitting }) => {
-      setSubmitting(true);
-      submitHandler(values);
-      setSubmitting(false);
-    },
-  });
-
   return (
     <Section
       className="create"
@@ -138,152 +127,128 @@ const Create: React.FunctionComponent = (): React.ReactElement => {
           </Text>
         </Col>
       </Row>
-      <Row>
-        <Col md={8}>
-          <form onSubmit={formik.handleSubmit}>
+      <Formik
+        initialValues={initialValues}
+        validationSchema={!id ? createSchema : updateSchema}
+        enableReinitialize
+        onSubmit={(values) => submitHandler(values)}
+      >
+        {({ values, handleChange, errors, touched }) => (
+          <Form>
             <Row>
-              <Col md={12} className="mb-3">
-                <label htmlFor="name" className="w-100">
-                  Nome
-                  <br />
-                  <input
-                    date-testid="test-inputName"
-                    id="name"
-                    name="name"
-                    disabled={!!id}
-                    value={formik.values.name}
-                    placeholder="Nome do funcionário"
-                    className={classNames('form-control')}
-                  />
-                </label>
-              </Col>
-
-              <Col md={4} className="mb-3">
-                <label htmlFor="cpf" className="w-100">
-                  CPF
-                  <br />
-                  <InputMask
-                    mask="999.999.999-99"
-                    maskPlaceholder={' '}
-                    value={formik.values.cpf}
-                    onChange={formik.handleChange}
-                    disabled={!!id}
-                  >
-                    {() => (
-                      <input
-                        value={formik.values.cpf}
-                        onChange={formik.handleChange}
-                        disabled={!!id}
-                        data-testid="test-inputCpf"
-                        id="cpf"
-                        name="cpf"
-                        placeholder="CPF do funcionário"
-                        className={classNames('form-control')}
-                      />
-                    )}
-                  </InputMask>
-                </label>
-              </Col>
-
-              <Col md={4} className="mb-3">
-                <div className="w-100">
-                  Data de Nascimento
-                  <br />
-                  <input
-                    data-testid="test-inputBirthdate"
-                    id="birthdate"
-                    name="birthdate"
-                    type="date"
-                    disabled={!!id}
-                    value={`${formik.values.birthdate}`}
-                    onChange={formik.handleChange}
-                    className={classNames('form-control')}
-                  />
-                </div>
-              </Col>
-
-              <Col md={4} className="mb-3">
-                <label htmlFor="role" className="w-100">
-                  Papel do funcionário
-                  <br />
-                  <select
-                    data-testid="test-selectRole"
-                    id="role"
-                    name="role"
-                    value={formik.values.role}
-                    onChange={formik.handleChange}
-                    className={classNames('form-control')}
-                  >
-                    <option>-- Selecione --</option>
-                    <option value={ERole.admin}>Administrador</option>
-                    <option value={ERole.user}>Colaborador</option>
-                  </select>
-                </label>
-              </Col>
-
-              {!id && (
-                <>
-                  <Col md={6} className="mb-3">
-                    <label htmlFor="password" className="w-100">
-                      Senha
-                      <br />
-                      <input
-                        data-testid="test-inputPassword"
-                        id="password"
-                        name="password"
-                        type="password"
-                        value={formik.values.password}
-                        onChange={formik.handleChange}
-                        placeholder="Senha"
-                        className={classNames('form-control')}
-                      />
-                    </label>
+              <Col md={8}>
+                <Row>
+                  <Col md={12} className="mb-3">
+                    <Input
+                      cy="test-inputName"
+                      isInvalid={(errors.name && touched.name) || false}
+                      msg={errors.name}
+                      label="Nome"
+                      id="name"
+                      name="name"
+                      as="input"
+                      placeholder="Insira o nome do funcionário"
+                      disabled={!!id}
+                    />
                   </Col>
 
-                  <Col md={6} className="mb-3">
-                    <label htmlFor="confirmPassword" className="w-100">
-                      Confirmar senha
-                      <br />
-                      <input
-                        data-testid="test-inputConfirmPassword"
-                        id="confirmPassword"
-                        name="confirmPassword"
-                        type="password"
-                        value={formik.values.confirmPassword}
-                        onChange={formik.handleChange}
-                        placeholder="Confirmar senha"
-                        className={classNames('form-control')}
-                      />
-                    </label>
+                  <Col md={4} className="mb-3">
+                    <MaskedInput
+                      mask="999.999.999-99"
+                      cy="test-inputCpf"
+                      id="cpf"
+                      name="cpf"
+                      label="CPF"
+                      msg={errors.cpf}
+                      value={values.cpf}
+                      onChange={handleChange}
+                      placeholder="Insira o cpf do funcionário"
+                      disabled={!!id}
+                    />
                   </Col>
-                </>
-              )}
 
-              <Col md={12} className="mb-3">
-                <label htmlFor="obs" className="w-100">
-                  Observações
-                  <br />
-                  <textarea
-                    data-testid="test-inputObs"
-                    id="obs"
-                    name="obs"
-                    value={`${formik.values.obs}`}
-                    onChange={formik.handleChange}
-                    placeholder="Observações sobre o funcionário..."
-                    className={classNames('form-control')}
-                  />
-                </label>
-              </Col>
+                  <Col md={4} className="mb-3">
+                    <DateInput
+                      cy="test-inputBirthdate"
+                      id="birthdate"
+                      name="birthdate"
+                      value={`${values.birthdate}`}
+                      onChange={handleChange}
+                      label="Data de aniversário"
+                      disabled={!!id}
+                    />
+                  </Col>
 
-              <Col md={12} className="mb-3">
-                <Button type="submit" cy="test-login" variant="primary" disabled={!!loader}>
-                  {id ? 'Editar' : 'Criar'} funcionário
-                </Button>
+                  <Col md={4} className="mb-3">
+                    <Input
+                      cy="test-inputRole"
+                      id="role"
+                      name="role"
+                      label="Papel do funcionário"
+                      as="select"
+                      isInvalid={(errors.role && touched.role) || false}
+                      msg={errors.role}
+                      placeholder="-- Selecione --"
+                    >
+                      <>
+                        <option>-- Selecione --</option>
+                        <option value={ERole.admin}>Administrador</option>
+                        <option value={ERole.user}>Colaborador</option>
+                      </>
+                    </Input>
+                  </Col>
+
+                  {!id && (
+                    <>
+                      <Col md={6} className="mb-3">
+                        <Input
+                          cy="test-inputPassword"
+                          id="password"
+                          name="password"
+                          as="input"
+                          label="Senha do funcionário"
+                          isInvalid={(errors.password && touched.password) || false}
+                          msg={errors.password}
+                          placeholder="Senha"
+                        />
+                      </Col>
+                      <Col md={6} className="mb-3">
+                        <Input
+                          cy="test-inputConfirmPassword"
+                          id="confirmPassword"
+                          name="confirmPassword"
+                          label="Confirmar senha"
+                          as="input"
+                          isInvalid={(errors.confirmPassword && touched.confirmPassword) || false}
+                          msg={errors.confirmPassword}
+                          placeholder="Confirmar senha"
+                        />
+                      </Col>
+                    </>
+                  )}
+
+                  <Col md={12} className="mb-3">
+                    <Input
+                      cy="test-inputObs"
+                      id="obs"
+                      name="obs"
+                      as="input"
+                      label="Observações sobre o funcionário"
+                      component="textarea"
+                    />
+                  </Col>
+
+                  <Col md={12} className="mb-3">
+                    <Button type="submit" cy="test-login" variant="primary" disabled={!!loader}>
+                      {id ? 'Editar' : 'Criar'} funcionário
+                    </Button>
+                  </Col>
+                </Row>
               </Col>
             </Row>
-          </form>
-        </Col>
-      </Row>
+          </Form>
+        )}
+      </Formik>
     </Section>
   );
 };

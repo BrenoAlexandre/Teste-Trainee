@@ -21,6 +21,7 @@ const Home: React.FunctionComponent = () => {
     setLoader(true);
 
     try {
+      localStorage.clear();
       const data = await UsersService.login(cpf.replace(/\D/g, ''), password);
 
       if (data) {

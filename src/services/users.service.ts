@@ -46,13 +46,14 @@ class UsersService {
   }
 
   static async login(cpf: string, password: string): Promise<IUser> {
-    const { headers, data } = await HttpClient.api.post('api/v1/users/authenticate', { cpf, password });
+    const { headers, data } = await HttpClient.api.post('api/v1/login', { cpf, password });
 
     if (!headers || !headers.authorization) {
       throw new Error('No token found');
     }
 
     localStorage.setItem('TOKEN_KEY', `Bearer ${headers.authorization}`);
+    localStorage.setItem('user', JSON.stringify(data));
     HttpClient.api.defaults.headers.common.Authorization = `Bearer ${headers.authorization}`;
     return data;
   }
