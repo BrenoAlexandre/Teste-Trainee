@@ -2,13 +2,12 @@ import React, { useState, useEffect } from 'react';
 import * as yup from 'yup';
 import { Formik, Form } from 'formik';
 import { Row, Col } from 'react-bootstrap';
-import { useHistory, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { isValidCPF } from '@brazilian-utils/brazilian-utils';
 import Section from '../../../components/Section';
 import Text from '../../../components/Text';
 import Button from '../../../components/Button';
 import UsersService from '../../../services/users.service';
-import { IParam } from '../../../interfaces';
 import toastMsg, { ToastType } from '../../../utils/toastMsg';
 import ERole from '../../../enums/ERole';
 import Input from '../../../components/Input';
@@ -58,8 +57,8 @@ const defaultValue = {
 } as ICreate;
 
 const Create: React.FunctionComponent = (): React.ReactElement => {
-  const history = useHistory();
-  const { id } = useParams<IParam>();
+  const navigate = useNavigate();
+  const { id } = useParams();
   const [loader, setLoader] = useState<boolean>(false);
   const [initialValues, setInitialValues] = useState(defaultValue as ICreate);
 
@@ -82,7 +81,7 @@ const Create: React.FunctionComponent = (): React.ReactElement => {
       }
 
       setLoader(false);
-      history.push('/funcionarios');
+      navigate('/funcionarios');
     } catch (error) {
       setLoader(false);
       toastMsg(ToastType.Error, (error as Error).message);
@@ -118,7 +117,7 @@ const Create: React.FunctionComponent = (): React.ReactElement => {
     return () => {
       isCleaningUp = true;
     };
-  }, [history, id]);
+  }, [id]);
 
   return (
     <Section

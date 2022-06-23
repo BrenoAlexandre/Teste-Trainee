@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Button as BootButton, Row, Col, Modal } from 'react-bootstrap';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { formatCPF } from '@brazilian-utils/brazilian-utils';
 import Section from '../../../components/Section';
 import Text from '../../../components/Text';
@@ -30,7 +30,7 @@ const Users: React.FunctionComponent = (): React.ReactElement => {
     setDelId(id);
   };
 
-  const history = useHistory();
+  const navigate = useNavigate();
 
   const fetchUsers = async (): Promise<void> => {
     try {
@@ -94,7 +94,7 @@ const Users: React.FunctionComponent = (): React.ReactElement => {
       <Row>
         {isAdmin && (
           <Col md={3} className="mt-3 mb-2">
-            <Button type="button" variant="primary" onClick={() => history.push('/funcionarios/acao')} cy="test-create">
+            <Button type="button" variant="primary" onClick={() => navigate('/funcionarios/acao')} cy="test-create">
               Cadastrar funcionário
             </Button>
           </Col>
@@ -105,7 +105,7 @@ const Users: React.FunctionComponent = (): React.ReactElement => {
             variant="secondary"
             onClick={() => {
               localStorage.clear();
-              history.push('/');
+              navigate('/');
             }}
             cy="test-logout"
           >
@@ -118,7 +118,7 @@ const Users: React.FunctionComponent = (): React.ReactElement => {
             columns={columns}
             hasActions={!!isAdmin}
             deleteAction={(id) => handleOpen(id)}
-            editAction={(id) => history.push(`/funcionarios/acao/${id}`)}
+            editAction={(id) => navigate(`/funcionarios/acao/${id}`)}
           />
           <Modal show={open} onHide={handleClose}>
             <Modal.Header closeButton>

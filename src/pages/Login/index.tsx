@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Row, Col } from 'react-bootstrap';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Form, Formik } from 'formik';
 import * as yup from 'yup';
 import Section from '../../components/Section';
@@ -31,7 +31,7 @@ const Home: React.FunctionComponent = () => {
   const [loader, setLoader] = useState<boolean>(false);
   const [initialValues] = useState(defaultValue as ILogin);
 
-  const history = useHistory();
+  const navigate = useNavigate();
   const { Login } = useAuth();
 
   async function loginHandler(values: ILogin): Promise<void> {
@@ -43,7 +43,7 @@ const Home: React.FunctionComponent = () => {
       const response = await UsersService.login(cpf, password);
       Login(response);
 
-      history.replace('/funcionarios');
+      navigate('/funcionarios', { replace: true });
       setLoader(false);
     } catch (error) {
       toastMsg(ToastType.Error, 'Usuário incorreto, verifique seus dados.');
