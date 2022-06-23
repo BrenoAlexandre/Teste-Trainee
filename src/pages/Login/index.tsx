@@ -40,12 +40,10 @@ const Home: React.FunctionComponent = () => {
 
     try {
       localStorage.clear();
-      const { headers, data } = await UsersService.login(cpf, password);
-      const signed = await Login({ headers, data });
+      const response = await UsersService.login(cpf, password);
+      Login(response);
 
-      if (signed) {
-        history.replace('/funcionarios');
-      }
+      history.replace('/funcionarios');
       setLoader(false);
     } catch (error) {
       toastMsg(ToastType.Error, 'Usuário incorreto, verifique seus dados.');

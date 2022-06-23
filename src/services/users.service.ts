@@ -53,8 +53,6 @@ class UsersService {
       throw new Error('Token not received');
     }
 
-    localStorage.setItem('TOKEN_KEY', `Bearer ${headers.authorization}`);
-    localStorage.setItem('user', JSON.stringify(data));
     HttpClient.api.defaults.headers.common.Authorization = `Bearer ${headers.authorization}`;
     return { headers, data };
   }

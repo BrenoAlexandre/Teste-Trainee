@@ -1,14 +1,24 @@
-import { AxiosResponseHeaders } from 'axios';
-import jwtDecode from 'jwt-decode';
+import { AxiosError, AxiosResponseHeaders } from 'axios';
 import React, { createContext, useContext, useState } from 'react';
 import { IUser } from '../../interfaces';
-import HttpClient from '../../services/httpClient';
-import setTokenStorage from '../../utils/setTokenStorage';
+import toastMsg, { ToastType } from '../../utils/toastMsg';
+
+interface IContextUser {
+  id: string;
+  name: string;
+  role: string;
+}
+
+interface IContextLogin {
+  data: IUser;
+  headers: AxiosResponseHeaders;
+}
 
 interface AuthContextData {
-  signed: boolean;
-  user: IUser | null;
-  Login({ data, headers }: { data: IUser; headers: AxiosResponseHeaders }): Promise<boolean>;
+  logged: boolean;
+  user: IContextUser;
+  token: string;
+  Login({ data, headers }: IContextLogin): void;
   Logout(): void;
 }
 
@@ -24,32 +34,32 @@ export function useAuth(): AuthContextData {
 
 // Crinado o componente que retorna o Provider e suas funções
 export const AuthProvider = ({ children }: { children: React.ReactElement }): React.ReactElement => {
-  const [user, setUser] = useState<IUser | null>(null);
+  const [user, setUser] = useState<IContextUser>({ id: '', name: '', role: '' });
+  const [token, setToken] = useState<string>('');
 
-  async function Login({ data, headers }: { data: IUser; headers: AxiosResponseHeaders }): Promise<boolean> {
-    setTokenStorage('TOKEN_KEY', `Bearer ${headers.authorization}`);
+  function Login({ data, headers }: IContextLogin): void {
+    try {
+      localStorage.clear();
+      setToken(headers.authorization);
+      setUser({ id: data.id, name: data.name, role: data.role });
 
-    const decoded = await jwtDecode<Promise<IUser>>(headers.authorization);
-
-    if (decoded) {
-      HttpClient.api.defaults.headers.common.authorization = `Bearer ${headers.authorization}`;
-
-      localStorage.setItem('user', JSON.stringify(data));
-      setUser(data);
-      if (!user) return false;
-
-      return true;
+      localStorage.setItem('TOKEN_KEY', `Bearer ${headers.authorization}`);
+      localStorage.setItem('USER', JSON.stringify({ id: data.id, name: data.name, role: data.role }));
+    } catch (error) {
+      toastMsg(ToastType.Error, (error as AxiosError).response?.data || 'Internal Server Error!');
     }
-
-    return false;
   }
 
-  async function Logout(): Promise<void> {
-    setTokenStorage('TOKEN_KEY');
-    setUser(null);
+  function Logout(): void {
+    setToken('');
+    setUser({ id: '', name: '', role: '' });
+
+    localStorage.clear();
   }
 
-  return <AuthContext.Provider value={{ signed: Boolean(user), user, Login, Logout }}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={{ logged: !!token, user, token, Login, Logout }}>{children}</AuthContext.Provider>
+  );
 };
 
 export default AuthContext;

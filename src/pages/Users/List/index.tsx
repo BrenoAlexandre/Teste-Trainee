@@ -34,7 +34,7 @@ const Users: React.FunctionComponent = (): React.ReactElement => {
 
   const fetchUsers = async (): Promise<void> => {
     try {
-      const rawUser = localStorage.getItem('user');
+      const rawUser = localStorage.getItem('USER');
       if (!rawUser) {
         throw new Error();
       }
@@ -65,16 +65,18 @@ const Users: React.FunctionComponent = (): React.ReactElement => {
     }
   };
 
-  useEffect(() => {
-    let isCleaningUp = false;
+  useEffect((): void => {
+    try {
+      let isCleaningUp = false;
 
-    if (!isCleaningUp) {
-      UsersService.login('00000000000', '123123admin');
-      fetchUsers();
-    }
-    return () => {
+      if (!isCleaningUp) {
+        fetchUsers();
+      }
+
       isCleaningUp = true;
-    };
+    } catch (error) {
+      toastMsg(ToastType.Error, (error as Error).message);
+    }
   }, []);
 
   return (
