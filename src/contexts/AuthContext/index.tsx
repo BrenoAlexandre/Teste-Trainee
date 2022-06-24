@@ -1,5 +1,5 @@
 import { AxiosError, AxiosResponseHeaders } from 'axios';
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { IUser } from '../../interfaces';
 import toastMsg, { ToastType } from '../../utils/toastMsg';
 
@@ -36,6 +36,16 @@ export function useAuth(): AuthContextData {
 export const AuthProvider = ({ children }: { children: React.ReactElement }): React.ReactElement => {
   const [user, setUser] = useState<IContextUser>({ id: '', name: '', role: '' });
   const [token, setToken] = useState<string>('');
+
+  useEffect(() => {
+    const localToken = localStorage.getItem('TOKEN_KEY');
+    const localUser = localStorage.getItem('USER');
+
+    if (localToken && localUser) {
+      setToken(localToken);
+      setUser(JSON.parse(localUser));
+    }
+  }, []);
 
   function Login({ data, headers }: IContextLogin): void {
     try {
