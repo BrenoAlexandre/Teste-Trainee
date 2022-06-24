@@ -9,6 +9,7 @@ import { IUser } from '../../../interfaces';
 import UsersService from '../../../services/users.service';
 import toastMsg, { ToastType } from '../../../utils/toastMsg';
 import Button from '../../../components/Button';
+import { useAuth } from '../../../contexts/AuthContext';
 
 const columns = [
   { label: 'Nome', key: 'name' },
@@ -31,6 +32,7 @@ const Users: React.FunctionComponent = (): React.ReactElement => {
   };
 
   const navigate = useNavigate();
+  const { Logout } = useAuth();
 
   const fetchUsers = async (): Promise<void> => {
     try {
@@ -56,7 +58,7 @@ const Users: React.FunctionComponent = (): React.ReactElement => {
     try {
       const res = await UsersService.delete(id);
       if (res) {
-        toastMsg(ToastType.Success, 'User succesfully deleted');
+        toastMsg(ToastType.Success, 'Usuário removido com sucesso!');
       }
       fetchUsers();
       handleClose();
@@ -104,7 +106,7 @@ const Users: React.FunctionComponent = (): React.ReactElement => {
             type="button"
             variant="secondary"
             onClick={() => {
-              localStorage.clear();
+              Logout();
               navigate('/');
             }}
             cy="test-logout"

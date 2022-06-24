@@ -2,10 +2,10 @@ import React from 'react';
 import { Routes as Switch, Route, Navigate } from 'react-router-dom';
 import { Container } from 'react-bootstrap';
 import { routes } from './routes';
+import { useAuth } from '../contexts/AuthContext';
 
 // components;
 import Loader from '../components/Loader';
-import { useAuth } from '../contexts/AuthContext';
 
 interface IProps {
   children?: React.ReactNode;
@@ -19,11 +19,10 @@ const PrivateRoute = (props: IProps): React.ReactElement => {
   const { logged, user } = useAuth();
 
   let redirectPage;
-  if (mustBeAdmin && user.role !== 'admin') {
-    if (!isPublic && !logged) {
-      redirectPage = redirectTo ? <Navigate to={redirectTo} /> : '';
-    }
+  if ((mustBeAdmin && user.role !== 'admin') || (!isPublic && !logged)) {
+    redirectPage = redirectTo ? <Navigate to={redirectTo} /> : undefined;
   }
+
   return <div>{redirectPage || children}</div>;
 };
 

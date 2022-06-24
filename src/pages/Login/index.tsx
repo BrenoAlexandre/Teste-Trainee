@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Row, Col } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { Form, Formik } from 'formik';
@@ -32,7 +32,7 @@ const Home: React.FunctionComponent = () => {
   const [initialValues] = useState(defaultValue as ILogin);
 
   const navigate = useNavigate();
-  const { Login } = useAuth();
+  const { user, logged, Login } = useAuth();
 
   async function loginHandler(values: ILogin): Promise<void> {
     setLoader(true);
@@ -50,6 +50,12 @@ const Home: React.FunctionComponent = () => {
       setLoader(false);
     }
   }
+
+  useEffect(() => {
+    if (user && logged) {
+      navigate('/funcionarios');
+    }
+  }, [logged, navigate, user]);
 
   return (
     <Section className="home" title="Página inicial" description="Página inicial">
