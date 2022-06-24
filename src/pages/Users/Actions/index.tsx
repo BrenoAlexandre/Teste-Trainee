@@ -211,6 +211,7 @@ const Create: React.FunctionComponent = (): React.ReactElement => {
                           id="password"
                           name="password"
                           as="input"
+                          type="password"
                           label="Senha do funcionário"
                           isInvalid={(errors.password && touched.password) || false}
                           msg={errors.password}
@@ -224,6 +225,7 @@ const Create: React.FunctionComponent = (): React.ReactElement => {
                           name="confirmPassword"
                           label="Confirmar senha"
                           as="input"
+                          type="password"
                           isInvalid={(errors.confirmPassword && touched.confirmPassword) || false}
                           msg={errors.confirmPassword}
                           placeholder="Confirmar senha"

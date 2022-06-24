@@ -16,6 +16,7 @@ interface IInput {
   disabled?: boolean;
   children?: React.ReactNode;
   component?: string;
+  type?: string;
 }
 
 const Input = ({
@@ -31,6 +32,7 @@ const Input = ({
   disabled,
   children,
   component,
+  type,
 }: IInput): React.ReactElement => (
   <label htmlFor={id} className="w-100">
     {label}
@@ -38,6 +40,7 @@ const Input = ({
       <FastField
         cy={cy}
         as={as}
+        type={type}
         id={id}
         name={name}
         placeholder={placeholder}
@@ -49,6 +52,7 @@ const Input = ({
       <Field
         cy={cy}
         as={as}
+        type={type}
         id={id}
         name={name}
         placeholder={placeholder}

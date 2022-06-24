@@ -38,7 +38,7 @@ const Users: React.FunctionComponent = (): React.ReactElement => {
     try {
       const rawUser = localStorage.getItem('USER');
       if (!rawUser) {
-        throw new Error();
+        throw new Error('Recarregue a página');
       }
       const user: IUser = JSON.parse(rawUser);
 
@@ -62,6 +62,16 @@ const Users: React.FunctionComponent = (): React.ReactElement => {
       }
       fetchUsers();
       handleClose();
+    } catch (error) {
+      toastMsg(ToastType.Error, (error as Error).message);
+    }
+  };
+
+  const handleLogout = (): void => {
+    try {
+      Logout();
+      setUsers([]);
+      navigate('/');
     } catch (error) {
       toastMsg(ToastType.Error, (error as Error).message);
     }
@@ -106,8 +116,7 @@ const Users: React.FunctionComponent = (): React.ReactElement => {
             type="button"
             variant="secondary"
             onClick={() => {
-              Logout();
-              navigate('/');
+              handleLogout();
             }}
             cy="test-logout"
           >

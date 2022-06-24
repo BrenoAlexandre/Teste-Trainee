@@ -39,11 +39,11 @@ const Home: React.FunctionComponent = () => {
     const { cpf, password } = values;
 
     try {
-      localStorage.clear();
       const response = await UsersService.login(cpf, password);
-      Login(response);
+      await Login(response).then(() => {
+        navigate('/funcionarios', { replace: true });
+      });
 
-      navigate('/funcionarios', { replace: true });
       setLoader(false);
     } catch (error) {
       toastMsg(ToastType.Error, 'Usuário incorreto, verifique seus dados.');
@@ -73,7 +73,9 @@ const Home: React.FunctionComponent = () => {
             initialValues={initialValues}
             validationSchema={loginSchema}
             enableReinitialize
-            onSubmit={(values) => loginHandler(values)}
+            onSubmit={async (values) => {
+              await loginHandler(values);
+            }}
           >
             {({ values, handleChange, errors, touched }) => (
               <Form>
@@ -101,6 +103,7 @@ const Home: React.FunctionComponent = () => {
                     id="password"
                     name="password"
                     as="input"
+                    type="password"
                     label="Senha do funcionário"
                     isInvalid={(errors.password && touched.password) || false}
                     msg={errors.password}

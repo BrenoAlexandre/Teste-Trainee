@@ -55,6 +55,4 @@ const Routes: React.FunctionComponent = () => {
   );
 };
 
-Routes.defaultProps = { public: false };
-
 export default Routes;

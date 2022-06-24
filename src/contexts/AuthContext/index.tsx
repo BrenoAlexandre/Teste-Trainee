@@ -1,5 +1,5 @@
-import { AxiosError, AxiosResponseHeaders } from 'axios';
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { AxiosError, AxiosResponseHeaders } from 'axios';
 import { IUser } from '../../interfaces';
 import toastMsg, { ToastType } from '../../utils/toastMsg';
 
@@ -18,21 +18,18 @@ interface AuthContextData {
   logged: boolean;
   user: IContextUser;
   token: string;
-  Login({ data, headers }: IContextLogin): void;
+  Login({ data, headers }: IContextLogin): Promise<void>;
   Logout(): void;
 }
 
-// Criando o contexto
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);
 
-// Hook do context
 export function useAuth(): AuthContextData {
   const context = useContext(AuthContext);
 
   return context;
 }
 
-// Crinado o componente que retorna o Provider e suas funções
 export const AuthProvider = ({ children }: { children: React.ReactElement }): React.ReactElement => {
   const [user, setUser] = useState<IContextUser>({ id: '', name: '', role: '' });
   const [token, setToken] = useState<string>('');
@@ -47,7 +44,7 @@ export const AuthProvider = ({ children }: { children: React.ReactElement }): Re
     }
   }, []);
 
-  function Login({ data, headers }: IContextLogin): void {
+  async function Login({ data, headers }: IContextLogin): Promise<void> {
     try {
       localStorage.clear();
       setToken(headers.authorization);
@@ -61,10 +58,9 @@ export const AuthProvider = ({ children }: { children: React.ReactElement }): Re
   }
 
   function Logout(): void {
+    localStorage.clear();
     setToken('');
     setUser({ id: '', name: '', role: '' });
-
-    localStorage.clear();
   }
 
   return (
