@@ -1,33 +1,49 @@
 import React, { useState } from 'react';
 import { Row, Col } from 'react-bootstrap';
-import { useHistory } from 'react-router-dom';
-import classNames from 'classnames';
-import InputMask from 'react-input-mask';
+import { useNavigate } from 'react-router-dom';
+import { Form, Formik } from 'formik';
+import * as yup from 'yup';
 import Section from '../../components/Section';
 import Text from '../../components/Text';
 import Button from '../../components/Button';
 import UsersService from '../../services/users.service';
 import toastMsg, { ToastType } from '../../utils/toastMsg';
+import { MaskedInput } from '../../components/MaskedInput';
+import Input from '../../components/Input';
+import { useAuth } from '../../contexts/AuthContext';
+
+const loginSchema = yup.object().shape({
+  cpf: yup.string().length(11, 'CPF deve conter 11 dígitos').required('Campo obrigatório'),
+  password: yup.string().min(6, 'Min. 6 caracteres').required('Campo obrigatório'),
+});
+
+interface ILogin {
+  cpf: string;
+  password: string;
+}
+
+const defaultValue = {
+  cpf: '',
+  password: '',
+} as ILogin;
 
 const Home: React.FunctionComponent = () => {
-  const [cpf, setCpf] = useState<string>('');
-  const [password, setPassword] = useState<string>('');
   const [loader, setLoader] = useState<boolean>(false);
+  const [initialValues] = useState(defaultValue as ILogin);
 
-  const history = useHistory();
+  const navigate = useNavigate();
+  const { Login } = useAuth();
 
-  async function loginHandler(e: React.FormEvent<HTMLFormElement>): Promise<void> {
-    e.preventDefault();
+  async function loginHandler(values: ILogin): Promise<void> {
     setLoader(true);
+    const { cpf, password } = values;
 
     try {
-      const data = await UsersService.login(cpf.replace(/\D/g, ''), password);
+      localStorage.clear();
+      const response = await UsersService.login(cpf, password);
+      Login(response);
 
-      if (data) {
-        localStorage.setItem('user', JSON.stringify(data));
-        history.replace('/funcionarios');
-      }
-
+      navigate('/funcionarios', { replace: true });
       setLoader(false);
     } catch (error) {
       toastMsg(ToastType.Error, 'Usuário incorreto, verifique seus dados.');
@@ -47,61 +63,53 @@ const Home: React.FunctionComponent = () => {
             Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt
           </Text>
 
-          <form onSubmit={(e) => loginHandler(e)} style={{ paddingTop: '25px' }}>
-            <Text as="h2" size="1.85rem" weight={700}>
-              Login
-            </Text>
-
-            <Col md={3} className="mb-3">
-              <label htmlFor="cpf" className="w-100">
-                <Text as="span" size="1.2rem">
-                  CPF
+          <Formik
+            initialValues={initialValues}
+            validationSchema={loginSchema}
+            enableReinitialize
+            onSubmit={(values) => loginHandler(values)}
+          >
+            {({ values, handleChange, errors, touched }) => (
+              <Form>
+                <Text as="h2" size="1.85rem" weight={700}>
+                  Login
                 </Text>
-                <br />
-                <InputMask
-                  mask="999.999.999-99"
-                  maskPlaceholder=""
-                  value={cpf}
-                  onChange={(e) => setCpf(e.target.value)}
-                >
-                  {() => (
-                    <input
-                      data-testid="test-inputCpf"
-                      id="cpf"
-                      name="cpf"
-                      placeholder="000.000.000-00"
-                      className={classNames('form-control')}
-                    />
-                  )}
-                </InputMask>
-              </label>
-            </Col>
 
-            <Col md={3} className="mb-3">
-              <label htmlFor="password" className="w-100">
-                <Text as="span" size="1.2rem">
-                  Senha
-                </Text>
-                <br />
-                <input
-                  data-testid="test-inputPassword"
-                  id="password"
-                  name="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Insira sua senha"
-                  className={classNames('form-control')}
-                />
-              </label>
-            </Col>
+                <Col md={3} className="mb-3">
+                  <MaskedInput
+                    mask="999.999.999-99"
+                    cy="test-inputCpf"
+                    id="cpf"
+                    name="cpf"
+                    label="CPF"
+                    msg={errors.cpf}
+                    value={values.cpf}
+                    onChange={handleChange}
+                    placeholder="Insira o cpf do funcionário"
+                  />
+                </Col>
 
-            <Col md={12} className="mb-3">
-              <Button type="submit" variant="primary" disabled={loader} cy="test-login">
-                Login
-              </Button>
-            </Col>
-          </form>
+                <Col md={3} className="mb-3">
+                  <Input
+                    cy="test-inputPassword"
+                    id="password"
+                    name="password"
+                    as="input"
+                    label="Senha do funcionário"
+                    isInvalid={(errors.password && touched.password) || false}
+                    msg={errors.password}
+                    placeholder="Senha"
+                  />
+                </Col>
+
+                <Col md={12} className="mb-3">
+                  <Button type="submit" variant="primary" disabled={loader} cy="test-login">
+                    Login
+                  </Button>
+                </Col>
+              </Form>
+            )}
+          </Formik>
           <Text as="span"> Caso não consiga acessar, contate seu administrador</Text>
         </Col>
       </Row>

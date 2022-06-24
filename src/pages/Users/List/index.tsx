@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Row, Col } from 'react-bootstrap';
-import { useHistory } from 'react-router-dom';
+import { Button as BootButton, Row, Col, Modal } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
+import { formatCPF } from '@brazilian-utils/brazilian-utils';
 import Section from '../../../components/Section';
 import Text from '../../../components/Text';
 import DataTable from '../../../components/DataTable';
@@ -20,11 +21,20 @@ const Users: React.FunctionComponent = (): React.ReactElement => {
   const [users, setUsers] = useState<IUser[]>([]);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
 
-  const history = useHistory();
+  const [open, setOpen] = useState<boolean>(false);
+  const [delId, setDelId] = useState<string>('');
+
+  const handleClose = (): void => setOpen(false);
+  const handleOpen = (id: string): void => {
+    setOpen(true);
+    setDelId(id);
+  };
+
+  const navigate = useNavigate();
 
   const fetchUsers = async (): Promise<void> => {
     try {
-      const rawUser = localStorage.getItem('user');
+      const rawUser = localStorage.getItem('USER');
       if (!rawUser) {
         throw new Error();
       }
@@ -35,7 +45,7 @@ const Users: React.FunctionComponent = (): React.ReactElement => {
       }
 
       const rawData = await UsersService.users();
-      const data = rawData.filter((u) => u.id !== user.id);
+      const data = rawData.filter((u) => u.id !== user.id).map((u) => ({ ...u, cpf: formatCPF(u.cpf) }));
       setUsers(data);
     } catch (error) {
       toastMsg(ToastType.Error, (error as Error).message);
@@ -45,22 +55,28 @@ const Users: React.FunctionComponent = (): React.ReactElement => {
   const deleteUser = async (id: string): Promise<void> => {
     try {
       const res = await UsersService.delete(id);
-      toastMsg(ToastType.Success, res);
+      if (res) {
+        toastMsg(ToastType.Success, 'User succesfully deleted');
+      }
       fetchUsers();
+      handleClose();
     } catch (error) {
       toastMsg(ToastType.Error, (error as Error).message);
     }
   };
 
-  useEffect(() => {
-    let isCleaningUp = false;
+  useEffect((): void => {
+    try {
+      let isCleaningUp = false;
 
-    if (!isCleaningUp) {
-      fetchUsers();
-    }
-    return () => {
+      if (!isCleaningUp) {
+        fetchUsers();
+      }
+
       isCleaningUp = true;
-    };
+    } catch (error) {
+      toastMsg(ToastType.Error, (error as Error).message);
+    }
   }, []);
 
   return (
@@ -78,7 +94,7 @@ const Users: React.FunctionComponent = (): React.ReactElement => {
       <Row>
         {isAdmin && (
           <Col md={3} className="mt-3 mb-2">
-            <Button type="button" variant="primary" onClick={() => history.push('/funcionarios/acao')} cy="test-create">
+            <Button type="button" variant="primary" onClick={() => navigate('/funcionarios/acao')} cy="test-create">
               Cadastrar funcionário
             </Button>
           </Col>
@@ -89,7 +105,7 @@ const Users: React.FunctionComponent = (): React.ReactElement => {
             variant="secondary"
             onClick={() => {
               localStorage.clear();
-              history.push('/');
+              navigate('/');
             }}
             cy="test-logout"
           >
@@ -101,9 +117,31 @@ const Users: React.FunctionComponent = (): React.ReactElement => {
             data={users}
             columns={columns}
             hasActions={!!isAdmin}
-            deleteAction={(id) => deleteUser(id)}
-            editAction={(id) => history.push(`/funcionarios/acao/${id}`)}
+            deleteAction={(id) => handleOpen(id)}
+            editAction={(id) => navigate(`/funcionarios/acao/${id}`)}
           />
+          <Modal show={open} onHide={handleClose}>
+            <Modal.Header closeButton>
+              <Modal.Title>Excluir usuário?</Modal.Title>
+            </Modal.Header>
+
+            <Modal.Body>
+              <p>
+                Você tem certeza que deseja excluir este usuário?
+                <br />
+                <br /> Suas ações não poderam ser desfeitas.
+              </p>
+            </Modal.Body>
+
+            <Modal.Footer>
+              <BootButton variant="secondary" onClick={handleClose}>
+                Cancelar
+              </BootButton>
+              <BootButton variant="primary" onClick={() => deleteUser(delId)}>
+                Excluir
+              </BootButton>
+            </Modal.Footer>
+          </Modal>
         </Col>
       </Row>
     </Section>

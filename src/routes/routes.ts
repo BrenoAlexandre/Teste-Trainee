@@ -10,18 +10,34 @@ export const routes: IRoute[] = [
   {
     path: '/',
     component: Home,
+    isPublic: true,
+    adminOnly: false,
   },
   {
     path: '/funcionarios',
     component: Users,
+    isPublic: false,
+    adminOnly: false,
+    redirectTo: '/',
   },
   {
-    path: '/funcionarios/acao/:id?',
+    path: '/funcionarios/acao',
     component: Actions,
+    isPublic: false,
+    adminOnly: true,
+    redirectTo: '/funcionarios',
+  },
+  {
+    path: '/funcionarios/acao/:id',
+    component: Actions,
+    isPublic: false,
+    adminOnly: true,
+    redirectTo: '/funcionarios',
   },
   {
     path: '*',
     component: Error,
-    public: true,
+    isPublic: true,
+    adminOnly: false,
   },
 ];
